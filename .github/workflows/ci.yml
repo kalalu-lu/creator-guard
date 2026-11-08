@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: python -m pip install -r server/requirements.txt
+
+      - name: Compile Python
+        run: python -m compileall -q server scripts
+
+      - name: API smoke tests (no Ollama required)
+        run: python scripts/smoke_test.py
+
+      - name: Ollama HTTP contract test (fake server)
+        run: python scripts/llm_contract_test.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Syntax-check extension JavaScript
+        run: |
+          node --check extension/background.js
+          node --check extension/content/common.js
+          node --check extension/content/selectors.js                                                                      
+          node --check extension/content/dm-core.js
+          node --check extension/content/comments-core.js
+          node --check extension/popup/popup.js
+
+          node --check extension/content/dm-core.js
+          node --check extension/content/comments-core.js
+          node --check extension/popup/popup.js
