@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Creator Guard</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="logo">🛡️</div>
+    <div class="hero-text">
+      <h1>Creator Guard</h1>
+      <p>私信与评论 · 本地分析</p>
+    </div>
+    <span id="statusDot" class="status-dot"></span>
+  </header>
+
+  <main>
+    <section class="card status-card">
+      <div class="row">
+        <strong id="statusTitle">正在连接本地服务…</strong>
+        <button id="testBtn" class="ghost small-btn">测试连接</button>
+      </div>
+      <p id="statusDetail" class="muted">请先运行 start.bat</p>
+    </section>
+
+    <section class="card">
+      <label class="label" for="apiBase">本地服务地址</label>
+      <input id="apiBase" type="text" spellcheck="false" placeholder="http://127.0.0.1:8765">
+      <p class="hint">只允许本机地址，文本不会上传云端。</p>
+    </section>
+
+    <section class="card">
+      <div class="switch-row">
+        <div>
+          <strong>自动展开未读私信</strong>
+          <p class="hint">逐个点开读取全文。会增加账号被平台判定自动化的风险，默认关闭。</p>
+        </div>
+        <label class="switch">
+          <input id="autoOpenDm" type="checkbox">
+          <span></span>
+        </label>
+      </div>
+
+      <div class="switch-row">
+        <div>
+          <strong>自动滚动收集评论</strong>
+          <p class="hint">按人类节奏缓慢滚动，最多 30 屏。默认关闭。</p>
+        </div>
+        <label class="switch">
+          <input id="autoCollectComments" type="checkbox">
+          <span></span>
+        </label>
+      </div>
+
+      <div class="switch-row">
+        <div>
+          <strong>遮住恶意私信预览</strong>
+          <p class="hint">在会话列表里直接盖住辱骂文字，只留警告标签。</p>
+        </div>
+        <label class="switch">
+          <input id="hideFlaggedPreviews" type="checkbox">
+          <span></span>
+        </label>
+      </div>
+
+      <div class="switch-row">
+        <div>
+          <strong>高风险私信不展开</strong>
+          <p class="hint">预览快筛到恶意/违法时直接跳过，不点开全文。</p>
+        </div>
+        <label class="switch">
+          <input id="skipOpenFlagged" type="checkbox">
+          <span></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="grid2">
+        <label>
+          <span class="label">单次最多私信</span>
+          <input id="maxDmPerSession" type="number" min="1" max="50" step="1">
+        </label>
+        <label>
+          <span class="label">每日最多私信</span>
+          <input id="dailyDmCap" type="number" min="1" max="200" step="1">
+        </label>
+        <label>
+          <span class="label">评论最多滚动屏数</span>
+          <input id="maxCommentScrolls" type="number" min="1" max="100" step="1">
+        </label>
+        <label>
+          <span class="label">活跃开始小时</span>
+          <input id="activeStartHour" type="number" min="0" max="23" step="1">
+        </label>
+        <label>
+          <span class="label">活跃结束小时</span>
+          <input id="activeEndHour" type="number" min="0" max="23" step="1">
+        </label>
+      </div>
+      <p class="hint">只在活跃时段自动展开；每 10 条会强制休息 3 分钟。</p>
+    </section>
+
+    <section class="card links">
+      <button id="openBili" class="ghost">打开 B 站私信</button>
+      <button id="openXhs" class="ghost">打开小红书首页</button>
+    </section>
+    <p class="hint" style="margin:0 2px 4px;">小红书私信页如果一直转圈，先打开首页登录，再点右上角消息入口。</p>
+
+    <div id="saveHint" class="save-hint">设置会自动保存</div>
+  </main>
+
+  <footer>
+    <span>v0.1.0 · 只标注，不自动回复/拉黑/举报</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

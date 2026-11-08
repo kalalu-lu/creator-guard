@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Creator Guard mock DM</title>
+<link rel="stylesheet" href="../extension/styles/overlay.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f4f5f7; color: #1f2937; }
+  .app { display: flex; width: 980px; height: 640px; margin: 24px auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+  .conversation-list { width: 320px; border-right: 1px solid #e5e7eb; overflow: auto; }
+  .conversation-item { position: relative; display: flex; gap: 10px; min-height: 76px; padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+  .conversation-item:hover { background: #f8fafc; }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; background: #cbd5e1; flex: 0 0 42px; display: grid; place-items: center; font-size: 18px; }
+  .meta { min-width: 0; flex: 1; }
+  .name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .last-message { font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .unread-badge { position: absolute; top: 10px; right: 10px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: #ef4444; color: #fff; font-size: 11px; display: grid; place-items: center; }
+  .chat-panel { flex: 1; display: flex; flex-direction: column; }
+  .chat-head { height: 56px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; padding: 0 16px; font-weight: 700; }
+  .message-list { flex: 1; padding: 16px; overflow: auto; background: #f8fafc; }
+  .message-item { display: flex; margin-bottom: 12px; }
+  .message-item.self { justify-content: flex-end; }
+  .bubble { max-width: 70%; padding: 9px 12px; border-radius: 10px; background: #fff; border: 1px solid #e5e7eb; font-size: 13px; line-height: 1.6; }
+  .message-item.self .bubble { background: #dbeafe; border-color: #bfdbfe; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="conversation-list">
+    <div class="conversation-item active" data-conversation-id="u1">
+      <div class="avatar">黑</div>
+      <div class="meta"><div class="name">黑粉A</div><div class="last-message">傻逼，滚吧，别更新了</div></div>
+      <span class="unread-badge">1</span>
+    </div>
+    <div class="conversation-item" data-conversation-id="u2">
+      <div class="avatar">品</div>
+      <div class="meta"><div class="name">品牌方小助手</div><div class="last-message">想聊一下商务合作和报价</div></div>
+      <span class="unread-badge">2</span>
+    </div>
+    <div class="conversation-item" data-conversation-id="u3">
+      <div class="avatar">粉</div>
+      <div class="meta"><div class="name">老粉</div><div class="last-message">这期很好看，学到了</div></div>
+    </div>
+    <div class="conversation-item" data-conversation-id="u4">
+      <div class="avatar">建</div>
+      <div class="meta"><div class="name">建议粉</div><div class="last-message">建议把开头剪短一点，节奏会更紧凑</div></div>
+      <span class="unread-badge">1</span>
+    </div>
+  </div>
+  <div class="chat-panel">
+    <div class="chat-head" id="chatHead">黑粉A</div>
+    <div class="message-list" id="messageList">
+      <div class="message-item other"><div class="bubble">傻逼，滚吧，别更新了</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- Minimal Chrome extension API stub for a local mock page ---
+  const MOCK = {
+    u1: { name: "黑粉A", messages: [["other", "傻逼，滚吧，别更新了"]] },
+    u2: { name: "品牌方小助手", messages: [["other", "你好，我们是品牌方，想聊一下商务合作和报价。"]] },
+    u3: { name: "老粉", messages: [["other", "这期很好看，学到了。"], ["self", "谢谢支持！"]] },
+    u4: { name: "建议粉", messages: [["other", "建议把开头剪短一点，节奏会更紧凑。"]] }
+  };
+
+  function previewResult(item) {
+    const text = item.preview || "";
+    if (/傻逼|滚|去死/.test(text)) {
+      return { id: item.id, category: "malicious", severity: 2, confidence: 0.9, reason: "命中辱骂词", action: "恶意私信，建议拉黑", hide_preview: true, label: "恶意私信，建议拉黑", source: "rules-preview" };
+    }
+    if (/合作|报价|品牌/.test(text)) {
+      return { id: item.id, category: "collab", severity: 1, confidence: 0.8, reason: "命中合作词", action: "寻求合作，请尽快处理", hide_preview: false, label: "寻求合作，请尽快处理", source: "rules-preview" };
+    }
+    if (/建议|剪短|节奏/.test(text)) {
+      return { id: item.id, category: "suggestion", severity: 0, confidence: 0.7, reason: "出现建议表达", action: "有效建议", hide_preview: false, label: "有效建议", source: "rules-preview" };
+    }
+    return { id: item.id, category: "normal", severity: 0, confidence: 0.4, reason: "普通", action: "普通私信", hide_preview: false, label: "普通私信", source: "rules-preview" };
+  }
+
+  const params = new URLSearchParams(location.search);
+  const AUTO_OPEN = params.get("auto") === "1";
+  const SKIP_FLAGGED = params.get("skip") !== "0";
+
+  window.chrome = {
+    runtime: {
+      lastError: null,
+      sendMessage(message, callback) {
+        setTimeout(() => {
+          if (message.type === "cg:getConfig") {
+            return callback({ apiBase: "http://127.0.0.1:8765", autoOpenDm: AUTO_OPEN, autoCollectComments: false, hideFlaggedPreviews: true, skipOpenFlagged: SKIP_FLAGGED, maxDmPerSession: 4, dailyDmCap: 60, maxCommentScrolls: 30, activeStartHour: 0, activeEndHour: 23 });
+          }
+          if (message.type === "cg:log") return callback({ ok: true });
+          if (message.type === "cg:api") {
+            const path = message.path || "";
+            if (path.indexOf("/api/dm/preview") === 0) {
+              return callback({ results: (message.body.items || []).map(previewResult) });
+            }
+            if (path.indexOf("/api/dm/annotations") === 0) return callback({ annotations: {} });
+            if (path.indexOf("/api/dm/classify") === 0) {
+              const text = message.body.text || "";
+              const result = previewResult({ id: message.body.conversation_key, preview: text });
+              result.source = "llm+rules";
+              return callback(result);
+            }
+            return callback({});
+          }
+          return callback({});
+        }, 30);
+      }
+    },
+    storage: {
+      local: {
+        async get() { return {}; },
+        async set() {}
+      }
+    }
+  };
+
+  const chatHead = document.getElementById("chatHead");
+  const messageList = document.getElementById("messageList");
+  document.querySelectorAll(".conversation-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      document.querySelectorAll(".conversation-item").forEach((el) => el.classList.remove("active"));
+      item.classList.add("active");
+      const key = item.getAttribute("data-conversation-id");
+      const data = MOCK[key];
+      if (!data) return;
+      chatHead.textContent = data.name;
+      messageList.innerHTML = data.messages.map(([who, text]) =>
+        `<div class="message-item ${who}"><div class="bubble">${text}</div></div>`
+      ).join("");
+    });
+  });
+</script>
+<script src="../extension/content/common.js"></script>
+<script src="../extension/content/selectors.js"></script>
+<script>window.CG_SITE = "bilibili";</script>
+<script src="../extension/content/dm-core.js"></script>
+</body>
+</html>

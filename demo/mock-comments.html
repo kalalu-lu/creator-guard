@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Creator Guard mock comments</title>
+<link rel="stylesheet" href="../extension/styles/overlay.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f4f5f7; color: #1f2937; }
+  .page { width: 900px; margin: 24px auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 22px 26px 60px; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  .note { color: #64748b; font-size: 13px; margin-bottom: 22px; }
+  .comment-container { border-top: 1px solid #eef2f7; padding-top: 16px; }
+  .comment-title { font-weight: 700; margin-bottom: 10px; }
+  .comment-item { display: flex; gap: 10px; padding: 14px 0; border-bottom: 1px solid #f1f5f9; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: #cbd5e1; flex: 0 0 34px; display: grid; place-items: center; font-size: 14px; }
+  .comment-body { flex: 1; min-width: 0; }
+  .user-name { font-size: 12px; color: #64748b; font-weight: 700; margin-bottom: 3px; }
+  .comment-content { font-size: 14px; line-height: 1.7; }
+  .comment-foot { margin-top: 5px; font-size: 11px; color: #94a3b8; }
+  .like { margin-left: 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>测试笔记：把生活拍成电影</h1>
+  <div class="note">这是一条用于测试 Creator Guard 评论面板的假数据。</div>
+
+  <div class="comment-container">
+    <div class="comment-title">评论 6</div>
+
+    <div class="comment-item" data-comment-id="c1">
+      <div class="avatar">A</div>
+      <div class="comment-body">
+        <div class="user-name">用户A</div>
+        <div class="comment-content">建议把开头十秒剪短一点，节奏会更紧凑</div>
+        <div class="comment-foot"><span>2小时前</span><span class="like">128</span></div>
+      </div>
+    </div>
+
+    <div class="comment-item" data-comment-id="c2">
+      <div class="avatar">B</div>
+      <div class="comment-body">
+        <div class="user-name">用户B</div>
+        <div class="comment-content">这期太感人了，看哭了，真的很治愈</div>
+        <div class="comment-foot"><span>3小时前</span><span class="like">96</span></div>
+      </div>
+    </div>
+
+    <div class="comment-item" data-comment-id="c3">
+      <div class="avatar">C</div>
+      <div class="comment-body">
+        <div class="user-name">用户C</div>
+        <div class="comment-content">请问背景音乐是什么？好好听</div>
+        <div class="comment-foot"><span>4小时前</span><span class="like">31</span></div>
+      </div>
+    </div>
+
+    <div class="comment-item" data-comment-id="c4">
+      <div class="avatar">D</div>
+      <div class="comment-body">
+        <div class="user-name">用户D</div>
+        <div class="comment-content">有点失望，没有上期好看</div>
+        <div class="comment-foot"><span>5小时前</span><span class="like">12</span></div>
+      </div>
+    </div>
+
+    <div class="comment-item" data-comment-id="c5">
+      <div class="avatar">E</div>
+      <div class="comment-body">
+        <div class="user-name">用户E</div>
+        <div class="comment-content">傻逼博主，去死吧</div>
+        <div class="comment-foot"><span>6小时前</span><span class="like">0</span></div>
+      </div>
+    </div>
+
+    <div class="comment-item" data-comment-id="c6">
+      <div class="avatar">F</div>
+      <div class="comment-body">
+        <div class="user-name">用户F</div>
+        <div class="comment-content">哈哈哈哈哈，太真实了</div>
+        <div class="comment-foot"><span>7小时前</span><span class="like">58</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function classify(text) {
+    if (/傻逼|去死/.test(text)) return { category: "malicious", stance: "愤怒攻击", topic: "其他", is_actionable_suggestion: false, suggestion: "", confidence: 0.9, reason: "辱骂" };
+    if (/建议|剪短|节奏/.test(text)) return { category: "suggestion", stance: "实用建议", topic: "剪辑节奏", is_actionable_suggestion: true, suggestion: "把开头十秒剪短，节奏更紧凑", confidence: 0.8, reason: "可执行建议" };
+    if (/感人|哭了|治愈/.test(text)) return { category: "praise", stance: "感动共鸣", topic: "其他", is_actionable_suggestion: false, suggestion: "", confidence: 0.8, reason: "情感共鸣" };
+    if (/请问|什么/.test(text)) return { category: "question", stance: "询问", topic: "音乐音效", is_actionable_suggestion: false, suggestion: "", confidence: 0.7, reason: "提问" };
+    if (/失望|不好看/.test(text)) return { category: "negative", stance: "质疑反对", topic: "选题内容", is_actionable_suggestion: false, suggestion: "", confidence: 0.7, reason: "负评" };
+    return { category: "neutral", stance: "玩梗无关", topic: "其他", is_actionable_suggestion: false, suggestion: "", confidence: 0.5, reason: "玩梗" };
+  }
+
+  function stats() {
+    return {
+      platform: "bilibili",
+      thread_id: "mock",
+      thread_title: "测试笔记",
+      window_days: 5,
+      total: 6,
+      category_counts: { "有效建议": 1, "正向夸奖": 1, "提问": 1, "普通负评": 1, "恶意攻击": 1, "中性": 1 },
+      bars: [
+        { label: "感动共鸣", count: 2, pct: 33 },
+        { label: "实用建议", count: 1, pct: 17 },
+        { label: "询问", count: 1, pct: 17 },
+        { label: "质疑反对", count: 1, pct: 17 },
+        { label: "愤怒攻击", count: 1, pct: 17 }
+      ],
+      headline: "33% 的评论集中在「感动/共鸣」（基于 6 条评论）",
+      suggestion_summary: "把开头十秒剪短，整体节奏会更紧凑；下期可以保留现在的治愈感。",
+      top_suggestions: ["把开头十秒剪短，节奏更紧凑", "下期可以多一点幕后花絮"],
+      generated_at: new Date().toISOString(),
+      next_refresh_at: new Date(Date.now() + 5 * 86400000).toISOString(),
+      new_comments: 0,
+      cached: true
+    };
+  }
+
+  const AUTO_SCROLL = new URLSearchParams(location.search).get("auto") === "1";
+
+  window.chrome = {
+    runtime: {
+      lastError: null,
+      sendMessage(message, callback) {
+        setTimeout(() => {
+          if (message.type === "cg:getConfig") {
+            return callback({ apiBase: "http://127.0.0.1:8765", autoOpenDm: false, autoCollectComments: AUTO_SCROLL, hideFlaggedPreviews: true, skipOpenFlagged: true, maxDmPerSession: 20, dailyDmCap: 60, maxCommentScrolls: 5, activeStartHour: 0, activeEndHour: 23 });
+          }
+          if (message.type === "cg:log") return callback({ ok: true });
+          if (message.type === "cg:api") {
+            const path = message.path || "";
+            if (path.indexOf("/api/comments/classify") === 0) {
+              const results = (message.body.comments || []).map((item) => ({ id: item.id, ...classify(item.text) }));
+              return callback({ results, degraded: false, error: null, count: results.length });
+            }
+            if (path.indexOf("/api/comments/stats") === 0) return callback(stats());
+            if (path.indexOf("/api/dm/") === 0) return callback({});
+            return callback({});
+          }
+          return callback({});
+        }, 30);
+      }
+    },
+    storage: {
+      local: {
+        async get() { return {}; },
+        async set() {}
+      }
+    }
+  };
+</script>
+<script src="../extension/content/common.js"></script>
+<script src="../extension/content/selectors.js"></script>
+<script>window.CG_SITE = "bilibili";</script>
+<script src="../extension/content/comments-core.js"></script>
+</body>
+</html>
