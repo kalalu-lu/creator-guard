@@ -1,0 +1,15 @@
+.venv/
+demo/.edge-profile/
+demo/.edge-profile*/
+__pycache__/
+*.py[cod]
+server/data/
+creator-guard-test-*/
+creator-guard-llm-test-*/
+.env
+*.db
+*.db-wal
+*.db-shm
+*.zip
+.DS_Store
+Thumbs.db
